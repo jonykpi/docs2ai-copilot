@@ -27,7 +27,7 @@ class Docs2AIUploadWizard(models.TransientModel):
     _name = 'docs2ai.upload.wizard'
     _description = 'Wizard to upload PDF/Image to Docs2AI'
 
-    invoice_id = fields.Many2one('account.move', string='Vendor Bill', required=True, domain=[('move_type', '=', 'in_invoice')])
+    invoice_id = fields.Many2one('account.move', string='Vendor Bill (Optional)', required=False, domain=[('move_type', '=', 'in_invoice')])
     pdf_file = fields.Binary(string='Document File (PDF or Image)', required=True, attachment=True)
     pdf_filename = fields.Char(string='Filename')
 
@@ -79,12 +79,11 @@ class Docs2AIUploadWizard(models.TransientModel):
         if not self.pdf_file:
             raise UserError(_('Please select a file to upload.'))
         
-        if not self.invoice_id:
-            raise UserError(_('Vendor bill is required.'))
-        
-        # Ensure this is a vendor bill (not refund or other type)
-        if self.invoice_id.move_type != 'in_invoice':
-            raise UserError(_('This feature is only available for vendor bills.'))
+        # Invoice is optional - if provided, validate it's a vendor bill
+        if self.invoice_id:
+            # Ensure this is a vendor bill (not refund or other type)
+            if self.invoice_id.move_type != 'in_invoice':
+                raise UserError(_('This feature is only available for vendor bills.'))
         
         try:
             # Decode the base64 file
@@ -117,7 +116,7 @@ class Docs2AIUploadWizard(models.TransientModel):
                 raise UserError(_('Folder ID is not configured. Please configure it in Settings → Docs2AI.'))
             
             # Build API URL with folder_id
-            api_url = f'https://app.docs2ai.com/api/enterprise/{folder_id}/send-file-doc2ai'
+            api_url = f'http://backend.test/api/enterprise/{folder_id}/send-file-doc2ai'
             
             # Prepare the API request
             headers = {
@@ -137,7 +136,8 @@ class Docs2AIUploadWizard(models.TransientModel):
             }
             
             # Make API call
-            _logger.info(f'Uploading vendor bill {self.invoice_id.name} to Docs2AI (folder: {folder_id})...')
+            bill_info = f' for vendor bill {self.invoice_id.name}' if self.invoice_id else ''
+            _logger.info(f'Uploading document{bill_info} to Docs2AI (folder: {folder_id})...')
             _logger.info(f'API URL: {api_url}')
             _logger.info(f'Request headers: {headers}')
             _logger.info(f'Request data: {data}')
@@ -166,12 +166,14 @@ class Docs2AIUploadWizard(models.TransientModel):
             
             # Check response
             if response.status_code == 200 or response.status_code == 201:
-                # Mark vendor bill as uploaded
-                self.invoice_id.write({
-                    'docs2ai_uploaded': True,
-                    'docs2ai_upload_date': fields.Datetime.now(),
-                })
+                # Mark vendor bill as uploaded (if bill was selected)
+                if self.invoice_id:
+                    self.invoice_id.write({
+                        'docs2ai_uploaded': True,
+                        'docs2ai_upload_date': fields.Datetime.now(),
+                    })
                 
+                # Return action to close wizard, show notification, and refresh page
                 return {
                     'type': 'ir.actions.client',
                     'tag': 'display_notification',
@@ -180,6 +182,10 @@ class Docs2AIUploadWizard(models.TransientModel):
                         'message': _('Document successfully uploaded to Docs2AI.'),
                         'type': 'success',
                         'sticky': False,
+                        'next': {
+                            'type': 'ir.actions.client',
+                            'tag': 'reload',
+                        }
                     }
                 }
             else:

@@ -418,7 +418,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"type\": \"bill\",\n    \"partner_id\": 1,\n    \"bill_name\": \"BILL/2024/01/0001\",\n    \"invoice_date\": \"2024-01-15\",\n    \"invoice_date_due\": \"2024-02-15\",\n    \"journal_id\": 1,\n    \"currency_id\": \"USD\",\n    \"attachment\": {\n        \"name\": \"document.pdf\",\n        \"data\": \"base64_encoded_file_data_here\",\n        \"mimetype\": \"application/pdf\"\n    },\n    \"invoice_line_ids\": [\n        {\n            \"product_id\": 1,\n            \"name\": \"Product Description\",\n            \"quantity\": 1.0,\n            \"price_unit\": 100.0,\n            \"tax_ids\": [1, 2],\n            \"account_id\": 1\n        },\n        {\n            \"name\": \"Service Description\",\n            \"quantity\": 2.0,\n            \"price_unit\": 50.0,\n            \"tax_ids\": [1]\n        }\n    ]\n}",
+							"raw": "{\n    \"type\": \"bill\",\n    \"partner_id\": 1,\n    \"bill_name\": \"BILL/2024/01/0001\",\n    \"invoice_date\": \"2024-01-15\",\n    \"invoice_date_due\": \"2024-02-15\",\n    \"journal_id\": 1,\n    \"currency\": \"USD\",\n    \"attachment\": {\n        \"name\": \"document.pdf\",\n        \"data\": \"base64_encoded_file_data_here\",\n        \"mimetype\": \"application/pdf\"\n    },\n    \"invoice_line_ids\": [\n        {\n            \"product_id\": 1,\n            \"name\": \"Product Description\",\n            \"quantity\": 1.0,\n            \"price_unit\": 100.0,\n            \"tax\": 10,\n            \"account_id\": 1\n        },\n        {\n            \"name\": \"Service Description\",\n            \"quantity\": 2.0,\n            \"price_unit\": 50.0,\n            \"tax\": 10\n        }\n    ]\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -435,7 +435,7 @@
 								"bills"
 							]
 						},
-						"description": "Create a new vendor bill or receipt. Required: partner_id. Optional: type (\"bill\" or \"receipt\", default: \"bill\"), bill_name, invoice_date, invoice_date_due, journal_id, currency_id, attachment (object with name, data (base64), mimetype), invoice_line_ids (array of line items with product_id, name, quantity, price_unit, tax_ids, account_id)"
+						"description": "Create a new vendor bill or receipt. Required: partner_id. Optional: type (\"bill\" or \"receipt\", default: \"bill\"), bill_name, invoice_date, invoice_date_due, journal_id, currency (ISO code like USD/BDT), attachment (object with name, data (base64), mimetype), invoice_line_ids (array of line items with product_id, name, quantity, price_unit, tax (percentage like 10 for 10%) OR tax_ids, account_id)"
 					},
 					"response": []
 				}

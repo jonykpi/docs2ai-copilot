@@ -933,7 +933,7 @@ class Docs2AIApiController(http.Controller):
             "invoice_date": "2024-01-15",
             "invoice_date_due": "2024-02-15",
             "journal_id": 1,
-            "currency_id": "USD",
+            "currency": "USD",  // ISO currency code (e.g., USD, BDT)
             "attachment": {
                 "name": "document.pdf",
                 "data": "base64_encoded_file_data",
@@ -945,7 +945,7 @@ class Docs2AIApiController(http.Controller):
                     "name": "Product Description",
                     "quantity": 1.0,
                     "price_unit": 100.0,
-                    "tax_ids": [1, 2],
+                    "tax": 10,  // Tax percentage (e.g., 10 for 10%) - OR use tax_ids: [1, 2]
                     "account_id": 1
                 }
             ]
@@ -990,10 +990,34 @@ class Docs2AIApiController(http.Controller):
                 vals['invoice_date_due'] = data['invoice_date_due']
             if 'journal_id' in data:
                 vals['journal_id'] = data['journal_id']
-            if 'currency_id' in data:
+            currency_code = data.get('currency')
+            currency_id_value = data.get('currency_id')  # Backward compatibility
+            if currency_code:
+                currency_code = currency_code.upper()
+                currency_env = request.env['res.currency'].sudo().with_context(active_test=False)
+                currency = currency_env.search([
+                    '|', ('name', '=', currency_code),
+                    ('symbol', '=', currency_code)
+                ], limit=1)
+                if currency:
+                    if not currency.active:
+                        currency.write({'active': True})
+                else:
+                    currency_vals = {
+                        'name': currency_code,
+                        'symbol': currency_code,
+                        'rounding': 0.01,
+                        'active': True,
+                    }
+                    if 'decimal_places' in currency_env._fields:
+                        currency_vals['decimal_places'] = 2
+                    currency = currency_env.create(currency_vals)
+                    _logger.info(f'Auto-created currency {currency_code} (ID: {currency.id})')
+                vals['currency_id'] = currency.id
+            elif currency_id_value:
                 currency = request.env['res.currency'].sudo().search([
-                    '|', ('name', '=', data['currency_id']),
-                    ('id', '=', data['currency_id'])
+                    '|', ('name', '=', currency_id_value),
+                    ('id', '=', currency_id_value)
                 ], limit=1)
                 if currency:
                     vals['currency_id'] = currency.id
@@ -1011,8 +1035,74 @@ class Docs2AIApiController(http.Controller):
                         line_data['quantity'] = line['quantity']
                     if 'price_unit' in line:
                         line_data['price_unit'] = line['price_unit']
-                    if 'tax_ids' in line:
+                    
+                    # Handle tax - can be percentage (tax) or tax_ids array
+                    if 'tax' in line:
+                        # Search for tax by percentage rate for purchase invoices
+                        tax_percentage = float(line['tax'])
+                        tax = request.env['account.tax'].sudo().search([
+                            ('amount', '=', tax_percentage),
+                            ('type_tax_use', '=', 'purchase'),  # For vendor bills
+                            ('amount_type', '=', 'percent'),
+                        ], limit=1)
+                        if not tax:
+                            # Auto-create tax if not found
+                            company = request.env.company
+                            # Get tax account from existing purchase tax or find suitable account
+                            tax_account = None
+                            # Try to get account from default purchase tax
+                            if company.account_purchase_tax_id:
+                                existing_tax = company.account_purchase_tax_id
+                                tax_line = existing_tax.invoice_repartition_line_ids.filtered(
+                                    lambda l: l.repartition_type == 'tax'
+                                )
+                                if tax_line and tax_line[0].account_id:
+                                    tax_account = tax_line[0].account_id
+                            
+                            # If no account found, try to find any expense account
+                            if not tax_account:
+                                tax_account = request.env['account.account'].sudo().search([
+                                    ('account_type', '=', 'expense'),
+                                    ('company_id', '=', company.id)
+                                ], limit=1)
+                            
+                            # Create the tax record
+                            tax_vals = {
+                                'name': f'Tax {tax_percentage}%',
+                                'amount': tax_percentage,
+                                'amount_type': 'percent',
+                                'type_tax_use': 'purchase',
+                                'company_id': company.id,
+                                'invoice_repartition_line_ids': [
+                                    (0, 0, {
+                                        'repartition_type': 'base',
+                                        'factor_percent': 100.0,
+                                    }),
+                                    (0, 0, {
+                                        'repartition_type': 'tax',
+                                        'factor_percent': 100.0,
+                                        'account_id': tax_account.id if tax_account else False,
+                                    }),
+                                ],
+                                'refund_repartition_line_ids': [
+                                    (0, 0, {
+                                        'repartition_type': 'base',
+                                        'factor_percent': 100.0,
+                                    }),
+                                    (0, 0, {
+                                        'repartition_type': 'tax',
+                                        'factor_percent': 100.0,
+                                        'account_id': tax_account.id if tax_account else False,
+                                    }),
+                                ],
+                            }
+                            tax = request.env['account.tax'].sudo().create(tax_vals)
+                            _logger.info(f'Auto-created tax {tax_percentage}% for purchase invoices (ID: {tax.id})')
+                        line_data['tax_ids'] = [(6, 0, [tax.id])]
+                    elif 'tax_ids' in line:
+                        # Backward compatibility with tax_ids
                         line_data['tax_ids'] = [(6, 0, line['tax_ids'])]
+                    
                     if 'account_id' in line:
                         line_data['account_id'] = line['account_id']
                     line_vals.append((0, 0, line_data))
@@ -1068,6 +1158,7 @@ class Docs2AIApiController(http.Controller):
                     'partner_name': bill.partner_id.name if bill.partner_id else '',
                     'date': bill.date.isoformat() if bill.date else '',
                     'invoice_date': bill.invoice_date.isoformat() if bill.invoice_date else '',
+                    'currency': bill.currency_id.name if bill.currency_id else '',
                     'state': bill.state,
                     'amount_total': bill.amount_total,
                     'amount_untaxed': bill.amount_untaxed,
