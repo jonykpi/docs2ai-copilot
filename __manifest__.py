@@ -8,8 +8,8 @@
         After clicking the button, users can select a PDF or image file which will be sent to the Docs2AI API.
         This module only works with vendor bills (purchase entries), not customer invoices.
     """,
-    'author': 'Your Company',
-    'website': 'https://www.yourcompany.com',
+    'author': 'Docs2ai',
+    'website': 'https://www.docs2ai.co',
     'depends': ['account', 'base_setup'],
     'data': [
         'security/ir.model.access.csv',
@@ -17,6 +17,8 @@
         'views/account_move_views.xml',
         'views/docs2ai_upload_wizard_views.xml',
     ],
+    'icon': 'docs2ai_upload/static/description/icon.png',
+    'images': ['static/description/icon.png'],
     'installable': True,
     'application': False,
     'auto_install': False,
