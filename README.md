@@ -27,7 +27,7 @@ git clone git@github.com:jonykpi/docs2ai-copilot.git docs2ai_copilot
 cd /path/to/your/custom/addons        # must be a directory already in addons_path
 curl -L https://github.com/jonykpi/docs2ai-copilot/archive/refs/heads/main.zip -o docs2ai_copilot.zip
 unzip docs2ai_copilot.zip
-mv docs2ai-oddo-main docs2ai_copilot
+mv docs2ai-copilot-main docs2ai_copilot
 ```
 
 Staying inside that addons directory ensures Odoo already points at the new module. After extracting, go to Apps ▸ Developer Mode ▸ **Update Apps List**.
