@@ -18,14 +18,14 @@ Docs2AI Upload lets Odoo finance teams push vendor bills (PDF or images) straigh
 ### Option A – Clone straight into an addons path
 
 ```bash
-git clone https://github.com/jonykpi/docs2ai-oddo.git docs2ai_copilot
+git clone git@github.com:jonykpi/docs2ai-copilot.git docs2ai_copilot
 ```
 
 ### Option B – Download with `curl` (no git required)
 
 ```bash
 cd /path/to/your/custom/addons        # must be a directory already in addons_path
-curl -L https://github.com/jonykpi/docs2ai-oddo/archive/refs/heads/main.zip -o docs2ai_copilot.zip
+curl -L https://github.com/jonykpi/docs2ai-copilot/archive/refs/heads/main.zip -o docs2ai_copilot.zip
 unzip docs2ai_copilot.zip
 mv docs2ai-oddo-main docs2ai_copilot
 ```
