@@ -15,7 +15,7 @@
         'security/ir.model.access.csv',
         'views/res_config_settings_views.xml',
         'views/account_move_views.xml',
-        'views/docs2ai_copilot_wizard_views.xml',
+        'views/docs2ai_upload_wizard_views.xml',
     ],
     'icon': '/docs2ai_copilot/static/description/icon.png',
     'images': ['/docs2ai_copilot/static/description/icon.png'],
