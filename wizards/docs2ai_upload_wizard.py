@@ -116,7 +116,7 @@ class Docs2AIUploadWizard(models.TransientModel):
                 raise UserError(_('Folder ID is not configured. Please configure it in Settings → Docs2AI.'))
             
             # Build API URL with folder_id
-            api_url = f'http://backend.test/api/enterprise/{folder_id}/send-file-doc2ai'
+            api_url = f'https://app.docs2ai.com/api/enterprise/{folder_id}/send-file-doc2ai'
             
             # Prepare the API request
             headers = {
