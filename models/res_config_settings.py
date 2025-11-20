@@ -49,7 +49,6 @@ class ResConfigSettings(models.TransientModel):
         current_folder_id = self.env['ir.config_parameter'].sudo().get_param('docs2ai.folder_id', '')
         new_folder_id = self.docs2ai_folder_id
         api_key = self.docs2ai_api_key
-        
         # Only validate if folder_id changed and is provided
         if new_folder_id and new_folder_id != current_folder_id and api_key:
             try:
