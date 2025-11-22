@@ -35,10 +35,10 @@
             'docs2ai_copilot/static/src/xml/docs2ai_file_uploader.xml',
         ],
     },
-    'icon': '/docs2ai_copilot/static/description/icon.png',
+    'icon': '/static/description/icon.png',
     'images': [
-        '/docs2ai_copilot/static/description/cover.png',
-        '/docs2ai_copilot/static/description/icon.png',
+        '/static/description/cover.png',
+        '/static/description/icon.png',
     ],
     'installable': True,
     'application': False,
