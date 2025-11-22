@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Add buttons to vendor bills list view - inherit from view_in_invoice_tree which has the header -->
+    <record id="view_account_move_tree_inherit_docs2ai" model="ir.ui.view">
+        <field name="name">account.move.tree.inherit.docs2ai</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_invoice_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list/header" position="inside">
+                <button name="action_upload_to_docs2ai"
+                        string="Upload to Docs2AI"
+                        type="object"
+                        class="btn-default"
+                        icon="fa-upload"
+                        display="always"/>
+                <button name="action_open_scanner_link"
+                        string="verify"
+                        type="object"
+                        class="btn-secondary"
+                        icon="fa-external-link"
+                        display="always"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+
