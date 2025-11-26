@@ -112,3 +112,37 @@
     background-color: #fed7d7;
 }
 
+.docs2ai-verify-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.docs2ai-verify-button .docs2ai-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    display: none;
+    opacity: 0.6;
+}
+
+.docs2ai-verify-button .docs2ai-spinner.is-active {
+    display: inline-block;
+    animation: docs2ai-spin 0.75s linear infinite;
+}
+
+.docs2ai-verify-button .docs2ai-verify-text {
+    white-space: nowrap;
+}
+
+@keyframes docs2ai-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+

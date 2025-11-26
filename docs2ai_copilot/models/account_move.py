@@ -1,5 +1,11 @@
+import logging
+
+import requests
+
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+
+_logger = logging.getLogger(__name__)
 
 
 class AccountMove(models.Model):
@@ -65,4 +71,68 @@ class AccountMove(models.Model):
                 'target': 'new',
             }
         return False
+
+    @api.model
+    def docs2ai_get_verification_status(self):
+        """Fetch pending verification count and running flag from Docs2AI."""
+        params = self.env['ir.config_parameter'].sudo()
+        api_key = (params.get_param('docs2ai.api_key') or '').strip()
+        folder_id = (params.get_param('docs2ai.folder_id') or '').strip()
+
+        if not api_key or not folder_id:
+            _logger.warning('Docs2AI status skipped: missing api_key or folder_id (api: %s, folder: %s)', bool(api_key), bool(folder_id))
+            return {
+                'success': False,
+                'message': _('Docs2AI API key or folder ID is not configured.'),
+                'total_pending': 0,
+                'is_running': False,
+            }
+
+        base_url = f'http://backend.test/api/enterprise/{folder_id}/get-progress-status'
+        headers = {
+            'Authorization': api_key,
+            'Accept': 'application/json',
+        }
+
+        _logger.info('Docs2AI: Requesting status for folder %s at %s', folder_id, base_url)
+        response_json = {}
+        try:
+            response = requests.get(base_url, headers=headers, timeout=10)
+            _logger.info('Docs2AI: Response status code: %s', response.status_code)
+            response.raise_for_status()
+            if response.content:
+                response_json = response.json()
+                _logger.info('Docs2AI: Status response: %s', response_json)
+        except (ValueError, requests.exceptions.JSONDecodeError):
+            _logger.warning('Docs2AI get-progress-status response is not JSON.')
+            response_json = {}
+        except requests.RequestException as exc:
+            _logger.warning('Failed to fetch Docs2AI verification status: %s', exc)
+            return {
+                'success': False,
+                'message': str(exc),
+                'total_pending': 0,
+                'is_running': False,
+            }
+
+        data = response_json.get('data') if isinstance(response_json, dict) else {}
+        total_pending = 0
+        is_running = False
+
+        if isinstance(data, dict):
+            total_pending = int(data.get('total_pending') or 0)
+            is_running = bool(data.get('is_running'))
+        elif isinstance(data, list):
+            total_pending = len(data)
+            is_running = any(
+                isinstance(item, dict) and item.get('status') in {'pending', 'in_progress'}
+                for item in data
+            )
+
+        return {
+            'success': True,
+            'message': response_json.get('message') if isinstance(response_json, dict) else '',
+            'total_pending': total_pending,
+            'is_running': is_running,
+        }
 

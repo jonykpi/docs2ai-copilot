@@ -8,13 +8,13 @@
         <field name="arch" type="xml">
             <xpath expr="//list/header" position="inside">
                 <button name="action_upload_to_docs2ai"
-                        string="Upload to Docs2AI"
+                        string="Docs2AI"
                         type="object"
                         class="btn-default"
                         icon="fa-upload"
                         display="always"/>
                 <button name="action_open_scanner_link"
-                        string="verify"
+                        string="Verify"
                         type="object"
                         class="btn-secondary"
                         icon="fa-external-link"
