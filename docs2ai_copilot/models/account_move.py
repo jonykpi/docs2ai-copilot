@@ -88,7 +88,7 @@ class AccountMove(models.Model):
                 'is_running': False,
             }
 
-        base_url = f'http://backend.test/api/enterprise/{folder_id}/get-progress-status'
+        base_url = f'https://app.docs2ai.com/api/enterprise/{folder_id}/get-progress-status'
         headers = {
             'Authorization': api_key,
             'Accept': 'application/json',
